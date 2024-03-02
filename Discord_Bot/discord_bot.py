@@ -35,8 +35,6 @@ class AddressBot(discord.Client):
         for channel in guild.channels:
             if channel.name == channel_name and channel.type == channel_type:
                 return channel
-            else:
-                print(channel_name)
         try:
             new_channel = await guild.create_text_channel(name=channel_name)
             print(f"Created new channel: {new_channel.name}")
