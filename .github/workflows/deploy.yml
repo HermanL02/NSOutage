@@ -19,7 +19,7 @@ jobs:
       
       - name: Clean up and Deploy with Docker Compose
         run: |
-          ssh -o StrictHostKeyChecking=no username@your-server-ip << 'EOF'
+          ssh -o StrictHostKeyChecking=no root@45.76.139.194 << 'EOF'
             echo "Stopping and removing all Docker containers..."
             docker stop $(docker ps -aq)
             docker rm $(docker ps -aq)
