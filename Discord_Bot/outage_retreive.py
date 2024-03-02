@@ -197,7 +197,7 @@ def compare_items(local_item, cloud_item, fields_to_compare):
 
         
 if __name__ == "__main__":
-    jsons = retreive_latest_data(ip)
+    jsons = []
     d_list = []
     print(len(jsons))
     for i in jsons:      

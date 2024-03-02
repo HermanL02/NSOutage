@@ -19,6 +19,7 @@ def call_send_message_api_sync(user_id, message):
     response = requests.post(url, json={'user_id': user_id, 'message': message})
     print("Status:", response.status_code)
     print("Content:", response.text)
+    print(user_id)
 def calculate_polygon_centroid(polygon):
     x_list = [vertex[0] for vertex in polygon]
     y_list = [vertex[1] for vertex in polygon]
@@ -99,7 +100,3 @@ def notify_discord_user(type, users, cloud_item):
     for i in users:
         print(i)
         call_send_message_api_sync(i, message)
-        url = 'http://localhost:8081/send-message'  
-        response = requests.post(url, json={'user_id': i, 'message': message})
-        print("Status:", response.status_code)
-        print("Content:", response.text)
