@@ -1,9 +1,8 @@
 name: Deploy to Server via SSH
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
+
 
 jobs:
   deploy:
@@ -28,5 +27,5 @@ jobs:
             docker volume rm $(docker volume ls -q)
             echo "Removing all Docker networks (except default ones)..."
             docker network ls | grep -v "bridge\|none\|host" | awk '{print \$1}' | xargs docker network rm
-            cd /path/to/your/project
+            cd /root
             docker-compose up -d --build
