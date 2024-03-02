@@ -10,6 +10,7 @@ from pymongo.server_api import ServerApi
 from libs.common import load_environment_variable
 from notification import notify_discord_channel
 from notification import notify_discord_user
+import asyncio
 
 ip = load_environment_variable("IP_ADDRESS")
 token = load_environment_variable("DISCORD_BOT_TOKEN")
@@ -205,9 +206,14 @@ async def main():
     await update_into_mongo(d_list)
     await delete_from_mongo(d_list)
 
-# Make sure to run your main coroutine with an event loop
+
+async def loop_main_forever(interval):
+    while True:
+        await main()
+        await asyncio.sleep(interval)  # 等待interval秒，这里设置为120秒
+
 if __name__ == '__main__':
-    import asyncio
-    asyncio.run(main())
+    interval = 120  # 每2分钟运行一次
+    asyncio.run(loop_main_forever(interval))
 
     

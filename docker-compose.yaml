@@ -9,13 +9,22 @@ services:
       MONGO_INITDB_DATABASE: outages
 
 
-  app:
-    image: nsoutage:latest
+  api:
+    image: hermanyiqunliang/nsoutageapi:latest
     ports:
       - "8080:8080"
     depends_on:
       - mongo
-
+  app:
+    image: hermanyiqunliang/nsoutagedc:latest
+    ports:
+      - "8081:8081"
+    depends_on:
+      - mongo
+  notify:
+    image: hermanyiqunliang/nsoutagenotification:latest
+    depends_on:
+      - mongo
   
 volumes:
   my_mongo_data:
