@@ -4,6 +4,7 @@ services:
   mongo:
     image: mongo:latest
     volumes:
+      - my_mongo_data:/data/db
       - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js
     environment:
       MONGO_INITDB_DATABASE: outages
