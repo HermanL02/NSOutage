@@ -1,4 +1,4 @@
-from utility import load_environment_variable
+from libs.common import load_environment_variable
 from pymongo import MongoClient
 from pymongo.server_api import ServerApi
 

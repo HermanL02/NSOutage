@@ -1,16 +1,5 @@
-import os
-from dotenv import load_dotenv
-import requests
+
 import aiohttp
-import asyncio
-def load_environment_variable(var_name):
-    var_value = os.getenv(var_name)
-    if var_value is None:
-        load_dotenv()  
-        var_value = os.getenv(var_name)
-    return var_value
-
-
 
 async def call_broadcast_api_async(message):
     url = 'http://localhost:8081/broadcast'

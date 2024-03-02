@@ -7,9 +7,9 @@ from requests.exceptions import ConnectTimeout, ConnectionError
 from urllib3.exceptions import MaxRetryError
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
-from utility import load_environment_variable
-from utility import notify_discord_channel
-from utility import notify_discord_user
+from libs.common import load_environment_variable
+from notification import notify_discord_channel
+from notification import notify_discord_user
 
 ip = load_environment_variable("IP_ADDRESS")
 token = load_environment_variable("DISCORD_BOT_TOKEN")

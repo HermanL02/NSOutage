@@ -3,13 +3,11 @@ version: '3.8'
 services:
   mongo:
     image: mongo:latest
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: myuser
-      MONGO_INITDB_ROOT_PASSWORD: mypass
-    ports:
-      - "27017:27017"
     volumes:
-      - my_mongo_data:/data/db
+      - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js
+    environment:
+      MONGO_INITDB_DATABASE: outages
+
 
   app:
     image: nsoutage:latest
