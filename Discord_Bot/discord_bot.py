@@ -7,8 +7,9 @@ import aiohttp
 # Load environment variables
 load_dotenv()
 token = os.getenv('DISCORD_BOT_TOKEN')
-intents = discord.Intents.default()  # 默认的intent包括了大部分非特权事件
-intents.messages = True  # 如果你的bot需要读取消息
+intents = discord.Intents.default()  
+# 读取消息
+intents.messages = True  
 class AddressBot(discord.Client):
     async def on_ready(self):
         print(f'{self.user} has connected to Discord!')
@@ -30,9 +31,39 @@ class AddressBot(discord.Client):
                     - `!addaddress`: Adds a new address. Use format: !addaddress [nickname: eg. Home] [address: eg. 1048 Wellington St., Halifax, B3H 0C2].
                     """
                     await message.channel.send(help_message)
+    async def find_or_create_channel(self, guild, channel_name, channel_type=discord.ChannelType.text):
+        for channel in guild.channels:
+            if channel.name == channel_name and channel.type == channel_type:
+                return channel
+            else:
+                print(channel_name)
+        try:
+            new_channel = await guild.create_text_channel(name=channel_name)
+            print(f"Created new channel: {new_channel.name}")
+            return new_channel
+        except Exception as e:
+            print(f"Failed to create channel: {e}")
+            return None
+       
+    async def send_message_to_channel(self,guild_id, channel_name, message):
+        guild = self.get_guild(guild_id)
+        if not guild:
+            print(f"Guild with ID {guild_id} not found.")
+            return
+        channel = await self.find_or_create_channel(guild, channel_name)
+        if channel:
+            await channel.send(message)
+
+    async def broadcast_message_to_all_guilds(self, message):
+        for guild in self.guilds:
+            channel = await self.find_or_create_channel(guild, "ns-power-outages")
+            if channel:
+                await channel.send(message)
+
     async def send_direct_message(self, user_id, message):
         user = await self.fetch_user(user_id)
         await user.send(message)
+
     async def handle_add_address(self, message):
         address_name, address = self.parse_address_message(message.content)
         if not address_name or not address:

@@ -8,7 +8,7 @@ from urllib3.exceptions import MaxRetryError
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
 from utility import load_environment_variable
-
+from utility import notify_discord
 
 ip = load_environment_variable("IP_ADDRESS")
 token = load_environment_variable("DISCORD_BOT_TOKEN")
@@ -98,6 +98,7 @@ def coordinates_to_geojson(coords):
             "coordinates": [new_coordinates]
         }
 
+
 def update_into_mongo(mongo_json):
     # Fields to compare
     fields_to_compare = ['title', 'cause', 'cluster', 'val', 'start', 'etr']
@@ -113,6 +114,7 @@ def update_into_mongo(mongo_json):
             # If the serialized geom is not in cloud_geoms, insert the item
             collection.insert_one(local_item)
             print("Inserted item with geom:", local_item['geom'])
+            notify_discord("New", local_item)
         else:
             # If it exists, proceed with your comparison and update logic
             cloud_item = cloud_geoms[local_geom_serialized]
@@ -123,6 +125,7 @@ def update_into_mongo(mongo_json):
                 update_fields = {field: local_item[field] for field in differences}
                 collection.update_one({'_id': cloud_item['_id']}, {'$set': update_fields})
                 print(f"Updated item with geom: {local_item['geom']}. Fields updated: {', '.join(differences)}")
+                notify_discord(f"Updated {differences}", local_item)
             else:
                 print(f"Item with geom: {local_item['geom']} is already up to date.")
 
@@ -139,7 +142,10 @@ def delete_from_mongo(local_json):
         if cloud_geom_serialized not in local_geoms:
             # 如果云端有而本地没有，则删除
             collection.delete_one({'_id': cloud_item['_id']})
-            print("Deleted item with geom:", cloud_item['geom'])
+            notify_discord("Resolved", cloud_item)
+
+
+
 
 
 def compare_items(local_item, cloud_item, fields_to_compare):
