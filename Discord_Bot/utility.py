@@ -8,8 +8,9 @@ def load_environment_variable(var_name):
         load_dotenv()  
         var_value = os.getenv(var_name)
     return var_value
+
 def call_broadcast_api_sync(message):
-    url = 'http://localhost:8081/broadcast'  # 你的API端点
+    url = 'http://localhost:8081/broadcast'  
     response = requests.post(url, json={'message': message})
     print("Status:", response.status_code)
     print("Content:", response.text)
@@ -67,6 +68,7 @@ def notify_discord(type, cloud_item):
         "Influenced People": {cloud_item['val']},
         "Started at": {cloud_item['start']},
         "Previous Estimated End Time": {cloud_item['etr']}
+        For official information visit: https://outagemap.nspower.ca/external/default.html
         """
 
     call_broadcast_api_sync(message)

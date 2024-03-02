@@ -59,12 +59,3 @@ def get_addresses(user_id):
         return None
     else:
         return data['addresses']
-
-if __name__ == "__main__":
-    ip = load_environment_variable("IP_ADDRESS")
-    token = load_environment_variable("DISCORD_BOT_TOKEN")
-    uri = load_environment_variable("MONGO_URI")
-    # Create a new client and connect to the server
-    client = MongoClient(uri, server_api=ServerApi('1'))
-    db = client["outages"]
-    collection = db['outages']
