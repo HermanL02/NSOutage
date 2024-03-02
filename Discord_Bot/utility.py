@@ -1,7 +1,8 @@
 import os
 from dotenv import load_dotenv
 import requests
-import json
+import aiohttp
+import asyncio
 def load_environment_variable(var_name):
     var_value = os.getenv(var_name)
     if var_value is None:
@@ -9,18 +10,25 @@ def load_environment_variable(var_name):
         var_value = os.getenv(var_name)
     return var_value
 
-def call_broadcast_api_sync(message):
-    url = 'http://localhost:8081/broadcast'  
-    response = requests.post(url, json={'message': message})
-    print("Status:", response.status_code)
-    print("Content:", response.text)
-def call_send_message_api_sync(user_id, message):
-    url = 'http://localhost:8081/send-message'  
-    response = requests.post(url, json={'user_id': user_id, 'message': message})
-    print("Status:", response.status_code)
-    print("Content:", response.text)
-    print(user_id)
-def calculate_polygon_centroid(polygon):
+
+
+async def call_broadcast_api_async(message):
+    url = 'http://localhost:8081/broadcast'
+    async with aiohttp.ClientSession() as session:
+        async with session.post(url, json={'message': message}) as response:
+            print("Status:", response.status)
+            text = await response.text()
+            print("Content:", text)
+
+async def call_send_message_api_async(user_id, message):
+    url = 'http://localhost:8081/send-message'
+    async with aiohttp.ClientSession() as session:
+        async with session.post(url, json={'user_id': user_id, 'message': message}) as response:
+            print("Status:", response.status)
+            text = await response.text()
+            print("Content:", text)
+            print(user_id)
+async def calculate_polygon_centroid(polygon):
     x_list = [vertex[0] for vertex in polygon]
     y_list = [vertex[1] for vertex in polygon]
     len_polygon = len(polygon)
@@ -28,43 +36,47 @@ def calculate_polygon_centroid(polygon):
     y_centroid = sum(y_list) / len_polygon
     return (x_centroid, y_centroid)
 
-def get_location_name(latitude, longitude):
+async def get_location_name(latitude, longitude):
     url = 'https://nominatim.openstreetmap.org/reverse'
     params = {
         'format': 'json',
         'lat': latitude,
         'lon': longitude,
-        'zoom': 18,  # 调整zoom级别可以改变查询的精度
+        'zoom': 18,  # Adjusting zoom level changes the precision of the query
     }
-    response = requests.get(url, params=params)
-    data = response.json()
-    # 尝试从address字段获取详细信息
-    if 'address' in data:
-        address = data['address']
-        # 构建具体的地址字符串
-        # 下面列出的是一些常见的地址组成部分，你可以根据需要添加或删除
-        parts = [
-            address.get('road'),
-            address.get('suburb'),
-            address.get('city_district'),
-            address.get('city'),
-            address.get('county'),
-            address.get('state'),
-            address.get('postcode'),
-            address.get('country'),
-        ]
-        detailed_address = ', '.join([part for part in parts if part is not None])
-        return detailed_address if detailed_address else data.get('display_name', "Location name not found")
-    else:
-        return "Location name not found"
-def notify_discord_channel(type, cloud_item):
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url, params=params) as response:
+            if response.status == 200:
+                data = await response.json()
+                # Try to get detailed information from the address field
+                if 'address' in data:
+                    address = data['address']
+                    # Build the detailed address string
+                    # Listed below are some common parts of an address, add or remove as needed
+                    parts = [
+                        address.get('road'),
+                        address.get('suburb'),
+                        address.get('city_district'),
+                        address.get('city'),
+                        address.get('county'),
+                        address.get('state'),
+                        address.get('postcode'),
+                        address.get('country'),
+                    ]
+                    detailed_address = ', '.join([part for part in parts if part is not None])
+                    return detailed_address if detailed_address else data.get('display_name', "Location name not found")
+                else:
+                    return "Location name not found"
+            else:
+                return "Failed to fetch location details"
+async def notify_discord_channel(type, cloud_item):
     # Retreive central point of the geom (if it is a polygon)
     if cloud_item['geom']['type'] == 'Polygon':
-        centroid = calculate_polygon_centroid(cloud_item['geom']['coordinates'][0])
-        location_name = get_location_name(centroid[1], centroid[0])
+        centroid = await calculate_polygon_centroid(cloud_item['geom']['coordinates'][0])
+        location_name = await get_location_name(centroid[1], centroid[0])
         location_name += "(Area)"
     elif cloud_item['geom']['type'] == 'Point':
-        location_name = get_location_name(cloud_item['geom']['coordinates'][1], cloud_item['geom']['coordinates'][0])
+        location_name = await get_location_name(cloud_item['geom']['coordinates'][1], cloud_item['geom']['coordinates'][0])
     
     message = f""" {type} Outage: 
         {cloud_item['title']}
@@ -77,15 +89,15 @@ def notify_discord_channel(type, cloud_item):
         For official information visit: https://outagemap.nspower.ca/external/default.html
         """
 
-    call_broadcast_api_sync(message)
-def notify_discord_user(type, users, cloud_item):
+    await call_broadcast_api_async(message)
+async def notify_discord_user(type, users, cloud_item):
     # Retreive central point of the geom (if it is a polygon)
     if cloud_item['geom']['type'] == 'Polygon':
-        centroid = calculate_polygon_centroid(cloud_item['geom']['coordinates'][0])
-        location_name = get_location_name(centroid[1], centroid[0])
+        centroid = await calculate_polygon_centroid(cloud_item['geom']['coordinates'][0])
+        location_name = await get_location_name(centroid[1], centroid[0])
         location_name += "(Area)"
     elif cloud_item['geom']['type'] == 'Point':
-        location_name = get_location_name(cloud_item['geom']['coordinates'][1], cloud_item['geom']['coordinates'][0])
+        location_name = await get_location_name(cloud_item['geom']['coordinates'][1], cloud_item['geom']['coordinates'][0])
     message = f""" {type} Outage: 
     This is related to one of your subscribed locations.
         {cloud_item['title']}
@@ -99,4 +111,4 @@ def notify_discord_user(type, users, cloud_item):
         """
     for i in users:
         print(i)
-        call_send_message_api_sync(i, message)
+        await call_send_message_api_async(i, message)

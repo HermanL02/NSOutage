@@ -100,7 +100,7 @@ def coordinates_to_geojson(coords):
             "coordinates": [new_coordinates]
         }
 
-def send_notify_user_request(type,localitem):
+async def send_notify_user_request(type,localitem):
     geoJson = localitem['geom']
     if geoJson["type"] == "Point":
         # search the subscription
@@ -130,9 +130,9 @@ def send_notify_user_request(type,localitem):
         }
         })
         user_ids = [doc["user_id"] for doc in query_result if "user_id" in doc]
-    notify_discord_user(type,user_ids,localitem)
+    await notify_discord_user(type,user_ids,localitem)
     print("Notified users:", user_ids)
-def update_into_mongo(mongo_json):
+async def update_into_mongo(mongo_json):
     # Fields to compare
     fields_to_compare = ['title', 'cause', 'cluster', 'val', 'start', 'etr']
     # Assuming the rest of your function is correct
@@ -147,8 +147,8 @@ def update_into_mongo(mongo_json):
             # If the serialized geom is not in cloud_geoms, insert the item
             collection.insert_one(local_item)
             print("Inserted item with geom:", local_item['geom'])
-            notify_discord_channel("New", local_item)
-            send_notify_user_request("New",local_item)
+            await notify_discord_channel("New", local_item)
+            await send_notify_user_request("New",local_item)
         else:
             # If it exists, proceed with your comparison and update logic
             cloud_item = cloud_geoms[local_geom_serialized]
@@ -159,12 +159,12 @@ def update_into_mongo(mongo_json):
                 update_fields = {field: local_item[field] for field in differences}
                 collection.update_one({'_id': cloud_item['_id']}, {'$set': update_fields})
                 print(f"Updated item with geom: {local_item['geom']}. Fields updated: {', '.join(differences)}")
-                notify_discord_channel(f"Updated {differences}", local_item)
-                send_notify_user_request(f"Updated {differences}", local_item)
+                await notify_discord_channel(f"Updated {differences}", local_item)
+                await send_notify_user_request(f"Updated {differences}", local_item)
             else:
                 print(f"Item with geom: {local_item['geom']} is already up to date.")
 
-def delete_from_mongo(local_json):
+async def delete_from_mongo(local_json):
     # 序列化本地 geom 列表
     local_geoms = set(json.dumps(item['geom'], sort_keys=True) for item in local_json)
 
@@ -177,8 +177,8 @@ def delete_from_mongo(local_json):
         if cloud_geom_serialized not in local_geoms:
             # 如果云端有而本地没有，则删除
             collection.delete_one({'_id': cloud_item['_id']})
-            notify_discord_channel("Resolved", cloud_item)
-            send_notify_user_request("Resolved", cloud_item)
+            await notify_discord_channel("Resolved", cloud_item)
+            await send_notify_user_request("Resolved", cloud_item)
             
 
 
@@ -193,11 +193,8 @@ def compare_items(local_item, cloud_item, fields_to_compare):
             differences.append(field)
     return differences
 
-
-
-        
-if __name__ == "__main__":
-    jsons = []
+async def main():
+    jsons = retreive_latest_data(ip)
     d_list = []
     print(len(jsons))
     for i in jsons:      
@@ -205,7 +202,12 @@ if __name__ == "__main__":
         for j in decoded:
             d_list.append(j)
     print(len(d_list))
-    update_into_mongo(d_list)
-    delete_from_mongo(d_list)
+    await update_into_mongo(d_list)
+    await delete_from_mongo(d_list)
+
+# Make sure to run your main coroutine with an event loop
+if __name__ == '__main__':
+    import asyncio
+    asyncio.run(main())
 
     
