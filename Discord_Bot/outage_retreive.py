@@ -8,7 +8,8 @@ from urllib3.exceptions import MaxRetryError
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
 from utility import load_environment_variable
-from utility import notify_discord
+from utility import notify_discord_channel
+from utility import notify_discord_user
 
 ip = load_environment_variable("IP_ADDRESS")
 token = load_environment_variable("DISCORD_BOT_TOKEN")
@@ -17,6 +18,7 @@ uri = load_environment_variable("MONGO_URI")
 client = MongoClient(uri, server_api=ServerApi('1'))
 db = client["outages"]
 collection = db['outages']
+usersCollection = db['user']
 
 # Retreive the latest data from the server
 def retreive_latest_data(ip):
@@ -98,7 +100,38 @@ def coordinates_to_geojson(coords):
             "coordinates": [new_coordinates]
         }
 
+def send_notify_user_request(type,localitem):
+    geoJson = localitem['geom']
+    if geoJson["type"] == "Point":
+        # search the subscription
+        # GeoJSON点
 
+        # 执行查询
+        query_result = usersCollection.find({
+        "addresses.location": {
+            "$near": {
+            "$geometry": geoJson,
+            "$maxDistance": 500
+            }
+        }
+        })
+        user_ids = [doc["user_id"] for doc in query_result if "user_id" in doc]
+    elif geoJson["type"] == "Polygon":
+        # search the subscription
+        # GeoJSON多边形
+
+
+        # 执行查询
+        query_result = usersCollection.find({
+        "addresses.location": {
+            "$geoWithin": {
+            "$geometry": geoJson
+            }
+        }
+        })
+        user_ids = [doc["user_id"] for doc in query_result if "user_id" in doc]
+    notify_discord_user(type,user_ids,localitem)
+    print("Notified users:", user_ids)
 def update_into_mongo(mongo_json):
     # Fields to compare
     fields_to_compare = ['title', 'cause', 'cluster', 'val', 'start', 'etr']
@@ -114,7 +147,8 @@ def update_into_mongo(mongo_json):
             # If the serialized geom is not in cloud_geoms, insert the item
             collection.insert_one(local_item)
             print("Inserted item with geom:", local_item['geom'])
-            notify_discord("New", local_item)
+            notify_discord_channel("New", local_item)
+            send_notify_user_request("New",local_item)
         else:
             # If it exists, proceed with your comparison and update logic
             cloud_item = cloud_geoms[local_geom_serialized]
@@ -125,7 +159,8 @@ def update_into_mongo(mongo_json):
                 update_fields = {field: local_item[field] for field in differences}
                 collection.update_one({'_id': cloud_item['_id']}, {'$set': update_fields})
                 print(f"Updated item with geom: {local_item['geom']}. Fields updated: {', '.join(differences)}")
-                notify_discord(f"Updated {differences}", local_item)
+                notify_discord_channel(f"Updated {differences}", local_item)
+                send_notify_user_request(f"Updated {differences}", local_item)
             else:
                 print(f"Item with geom: {local_item['geom']} is already up to date.")
 
@@ -142,8 +177,9 @@ def delete_from_mongo(local_json):
         if cloud_geom_serialized not in local_geoms:
             # 如果云端有而本地没有，则删除
             collection.delete_one({'_id': cloud_item['_id']})
-            notify_discord("Resolved", cloud_item)
-
+            notify_discord_channel("Resolved", cloud_item)
+            send_notify_user_request("Resolved", cloud_item)
+            
 
 
 

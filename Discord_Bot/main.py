@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 from discord_bot import AddressBot
-from web_server import start_web_server
+from message_server import start_web_server
 import discord
 import asyncio
 

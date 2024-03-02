@@ -14,6 +14,11 @@ def call_broadcast_api_sync(message):
     response = requests.post(url, json={'message': message})
     print("Status:", response.status_code)
     print("Content:", response.text)
+def call_send_message_api_sync(user_id, message):
+    url = 'http://localhost:8081/send-message'  
+    response = requests.post(url, json={'user_id': user_id, 'message': message})
+    print("Status:", response.status_code)
+    print("Content:", response.text)
 def calculate_polygon_centroid(polygon):
     x_list = [vertex[0] for vertex in polygon]
     y_list = [vertex[1] for vertex in polygon]
@@ -51,7 +56,7 @@ def get_location_name(latitude, longitude):
         return detailed_address if detailed_address else data.get('display_name', "Location name not found")
     else:
         return "Location name not found"
-def notify_discord(type, cloud_item):
+def notify_discord_channel(type, cloud_item):
     # Retreive central point of the geom (if it is a polygon)
     if cloud_item['geom']['type'] == 'Polygon':
         centroid = calculate_polygon_centroid(cloud_item['geom']['coordinates'][0])
@@ -72,3 +77,29 @@ def notify_discord(type, cloud_item):
         """
 
     call_broadcast_api_sync(message)
+def notify_discord_user(type, users, cloud_item):
+    # Retreive central point of the geom (if it is a polygon)
+    if cloud_item['geom']['type'] == 'Polygon':
+        centroid = calculate_polygon_centroid(cloud_item['geom']['coordinates'][0])
+        location_name = get_location_name(centroid[1], centroid[0])
+        location_name += "(Area)"
+    elif cloud_item['geom']['type'] == 'Point':
+        location_name = get_location_name(cloud_item['geom']['coordinates'][1], cloud_item['geom']['coordinates'][0])
+    message = f""" {type} Outage: 
+    This is related to one of your subscribed locations.
+        {cloud_item['title']}
+        "Location": {location_name},
+        "cause": {cloud_item['cause']},
+        "cluster": {cloud_item['cluster']},
+        "Influenced People": {cloud_item['val']},
+        "Started at": {cloud_item['start']},
+        "Previous Estimated End Time": {cloud_item['etr']}
+        For official information visit: https://outagemap.nspower.ca/external/default.html
+        """
+    for i in users:
+        print(i)
+        call_send_message_api_sync(i, message)
+        url = 'http://localhost:8081/send-message'  
+        response = requests.post(url, json={'user_id': i, 'message': message})
+        print("Status:", response.status_code)
+        print("Content:", response.text)
