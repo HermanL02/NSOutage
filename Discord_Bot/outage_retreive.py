@@ -112,7 +112,7 @@ async def send_notify_user_request(type,localitem):
         "addresses.location": {
             "$near": {
             "$geometry": geoJson,
-            "$maxDistance": 500
+            "$maxDistance": 50
             }
         }
         })
