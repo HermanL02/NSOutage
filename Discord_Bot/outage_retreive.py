@@ -195,16 +195,18 @@ def compare_items(local_item, cloud_item, fields_to_compare):
     return differences
 
 async def main():
-    jsons = retreive_latest_data(ip)
-    d_list = []
-    print(len(jsons))
-    for i in jsons:      
-        decoded = decode_json(i)
-        for j in decoded:
-            d_list.append(j)
-    print(len(d_list))
-    await update_into_mongo(d_list)
-    await delete_from_mongo(d_list)
+    try: 
+        jsons = retreive_latest_data(ip)
+        d_list = []
+        for i in jsons:      
+            decoded = decode_json(i)
+            for j in decoded:
+                d_list.append(j)
+        print(len(d_list))
+        await update_into_mongo(d_list)
+        await delete_from_mongo(d_list)
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
 
 
 async def loop_main_forever(interval):
