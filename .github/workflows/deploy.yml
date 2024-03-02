@@ -12,15 +12,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
       
-      - name: Set up SSH connection
-        uses: webfactory/ssh-agent@v0.5.3
+      - name: Execute SSH Commands
+        uses: appleboy/ssh-action@master
         with:
-          env:
-            SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-      
-      - name: Clean up and Deploy with Docker Compose
-        run: |
-          ssh -o StrictHostKeyChecking=no root@45.76.139.194 << 'EOF'
+          host: 45.76.139.194
+          username: root
+          password: ${{ secrets.SSH_PASSWORD }}
+          script: |
             echo "Stopping and removing all Docker containers..."
             docker stop $(docker ps -aq)
             docker rm $(docker ps -aq)
@@ -29,7 +27,6 @@ jobs:
             echo "Removing all Docker volumes..."
             docker volume rm $(docker volume ls -q)
             echo "Removing all Docker networks (except default ones)..."
-            docker network ls | grep "bridge\|none\|host" | awk '{print \$1}' | xargs docker network rm
+            docker network ls | grep -v "bridge\|none\|host" | awk '{print \$1}' | xargs docker network rm
             cd /path/to/your/project
             docker-compose up -d --build
-          EOF
