@@ -1,12 +1,10 @@
-import os
-from dotenv import load_dotenv
 from discord_bot import AddressBot
 from message_server import start_web_server
 import discord
 import asyncio
+from libs.common import load_environment_variable
 
-load_dotenv()
-token = os.getenv('DISCORD_BOT_TOKEN')
+token = load_environment_variable('DISCORD_BOT_TOKEN')
 intents = discord.Intents.default()
 intents.messages = True
 
