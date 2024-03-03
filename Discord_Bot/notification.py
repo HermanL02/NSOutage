@@ -2,7 +2,7 @@
 import aiohttp
 
 async def call_broadcast_api_async(message):
-    url = 'http://localhost:8081/broadcast'
+    url = 'http://app:8081/broadcast'
     async with aiohttp.ClientSession() as session:
         async with session.post(url, json={'message': message}) as response:
             print("Status:", response.status)
@@ -10,7 +10,7 @@ async def call_broadcast_api_async(message):
             print("Content:", text)
 
 async def call_send_message_api_async(user_id, message):
-    url = 'http://localhost:8081/send-message'
+    url = 'http://app:8081/send-message'
     async with aiohttp.ClientSession() as session:
         async with session.post(url, json={'user_id': user_id, 'message': message}) as response:
             print("Status:", response.status)

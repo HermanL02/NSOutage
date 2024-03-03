@@ -12,7 +12,6 @@ from notification import notify_discord_channel
 from notification import notify_discord_user
 import asyncio
 
-ip = load_environment_variable("IP_ADDRESS")
 token = load_environment_variable("DISCORD_BOT_TOKEN")
 uri = load_environment_variable("MONGO_URI")
 # Create a new client and connect to the server
@@ -22,10 +21,10 @@ collection = db['outages']
 usersCollection = db['user']
 
 # Retreive the latest data from the server
-def retreive_latest_data(ip):
+def retreive_latest_data():
     try:
         # request from ip
-        api = "http://"+ ip + ":8080/data"
+        api = "http://api:8080/data"
         print(api)
         # request with max wait time 15 seconds
         response = requests.get(api, timeout=600)
@@ -198,7 +197,7 @@ def compare_items(local_item, cloud_item, fields_to_compare):
 async def main():
     try: 
         print("Retreiving latest data at from the server...")
-        jsons = retreive_latest_data(ip)
+        jsons = retreive_latest_data()
         d_list = []
         for i in jsons:      
             decoded = decode_json(i)

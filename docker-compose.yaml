@@ -1,37 +1,21 @@
-# This is a sample Docker Compose file for the NS Outage project
-# Requires .env file includes 
-# IP_ADDRESS
-# DISCORD_BOT_TOKEN
-# MONGO_URI
-
 version: '3.8'
 
 services:
-  # mongo:
-  #   image: mongo:latest
-  #   volumes:
-  #     - my_mongo_data:/data/db
-  #     - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js
-  #   environment:
-  #     MONGO_INITDB_DATABASE: outages
-
-
   api:
     image: hermanyiqunliang/nsoutageapi:latest
     ports:
       - "8080:8080"
-    # depends_on:
-    #   - mongo
+
   app:
     image: hermanyiqunliang/nsoutagedc:latest
     ports:
       - "8081:8081"
-    # depends_on:
-    #   - mongo
+
   notify:
     image: hermanyiqunliang/nsoutagenotification:latest
-    # depends_on:
-    #   - mongo
-  
-# volumes:
-#   my_mongo_data:
+    environment:
+      API_URL: "api"
+      APP_URL: "http://app:8081"
+    depends_on:
+      - api
+      - app
