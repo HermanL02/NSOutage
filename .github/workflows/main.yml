@@ -28,7 +28,3 @@ jobs:
           file: Discord_Bot/outageDocker
           push: true
           tags: hermanyiqunliang/nsoutagenotification:latest
-          build-args: |
-            IP_ADDRESS=${{ secrets.IP_ADDRESS }}
-            DISCORD_BOT_TOKEN=${{ secrets.DISCORD_BOT_TOKEN }}
-            MONGO_URI=${{ secrets.MONGO_URI }}
