@@ -26,6 +26,7 @@ def retreive_latest_data(ip):
     try:
         # request from ip
         api = "http://"+ ip + ":8080/data"
+        print(api)
         # request with max wait time 15 seconds
         response = requests.get(api, timeout=600)
         # return the json data
