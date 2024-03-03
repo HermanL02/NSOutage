@@ -216,6 +216,7 @@ async def loop_main_forever(interval):
         await asyncio.sleep(interval)  # 等待interval秒，这里设置为120秒
 
 if __name__ == '__main__':
+    print("Starting outage retreival...")
     interval = 120  # 每2分钟运行一次
     asyncio.run(loop_main_forever(interval))
 
