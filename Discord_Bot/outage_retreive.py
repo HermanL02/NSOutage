@@ -196,6 +196,7 @@ def compare_items(local_item, cloud_item, fields_to_compare):
 
 async def main():
     try: 
+        print("Retreiving latest data at from the server...")
         jsons = retreive_latest_data(ip)
         d_list = []
         for i in jsons:      
