@@ -28,3 +28,10 @@ jobs:
           file: Discord_Bot/outageDocker
           push: true
           tags: hermanyiqunliang/nsoutagenotification:latest
+      - name: Build and Push Discord Bot DC Docker Image
+        uses: docker/build-push-action@v2
+        with:
+          context: Discord_Bot/
+          file: Discord_Bot/mainDocker
+          push: true
+          tags: hermanyiqunliang/nsoutagedc:latest
